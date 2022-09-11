@@ -14,7 +14,7 @@ OVERLAY_POSITIONS = {
     'seed': (40, SCREEN_HEIGHT - 80)
 }
 
-PLAEYR_TOOL_OFFSET = {
+PLAYER_TOOL_OFFSET = {
     'left': Vector2(-50, 40),
     'right': Vector2(50, 40),
     'up': Vector2(0, -10),
