@@ -1,14 +1,14 @@
 from pygame.math import Vector2
 
 # screen
-SCREEN_WIDTH = 1028
+SCREEN_WIDTH = 1080
 SCREEN_HEIGHT = 720
 TILE_SIZE = 64
 
 # overlay positions
 OVERLAY_POSITIONS = {
     'tool': (40, SCREEN_HEIGHT - 15),
-    'seed': (70, SCREEN_HEIGHT - 5)
+    'seed': (40, SCREEN_HEIGHT - 80)
 }
 
 PLAEYR_TOOL_OFFSET = {
