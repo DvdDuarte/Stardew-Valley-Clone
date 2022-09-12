@@ -1,7 +1,7 @@
 from pygame.math import Vector2
 
 # Player
-PLAYER_SPEED = 600 #Default = 200
+PLAYER_SPEED = 200 #Default = 200
 
 # screen
 SCREEN_WIDTH = 1080
