@@ -3,7 +3,11 @@ from settings import *
 from support import *
 from player import Player
 from overlay import Overlay
-from sprites import Generic, Water, WildFlower, Tree
+from sprites import Generic, Water, WildFlower, Tree, Interaction
+from transition import Transition
+from soil import SoilLayer
+from sky import Rain
+from random import randint
 from pytmx.util_pygame import load_pygame
 
 class Level:
@@ -15,9 +19,17 @@ class Level:
         self.all_sprites = CameraGroup()
         self.collision_sprites = pygame.sprite.Group()
         self.tree_sprites = pygame.sprite.Group()
+        self.interaction_sprites = pygame.sprite.Group()
 
+        self.soil_layer = SoilLayer(self.all_sprites, self.collision_sprites)
         self.setup()
         self.overlay = Overlay(self.player)
+        self.transition = Transition(self.reset, self.player)
+
+        # Sky
+        self.rain = Rain(self.all_sprites)
+        self.raining = randint(0,10) > 3
+        self.soil_layer.raining = self.raining
 
     def setup(self):
 
@@ -65,7 +77,17 @@ class Level:
                     pos = (obj.x, obj.y), 
                     group = self.all_sprites,
                     collision_sprites = self.collision_sprites,
-                    tree_sprites = self.tree_sprites)
+                    tree_sprites = self.tree_sprites,
+                    interaction = self.interaction_sprites,
+                    soil_layer = self.soil_layer
+                    )
+            if obj.name == 'Bed':
+                Interaction(
+                    pos = (obj.x, obj.y),
+                    size = (obj.width, obj.height),
+                    groups = self.interaction_sprites,
+                    name = obj.name
+                )
 
         Generic(
             pos = (0,0),
@@ -78,6 +100,24 @@ class Level:
 
         self.player.item_inventory[item] += 1
 
+    def reset(self):
+
+        # Plants
+        self.soil_layer.update_plants()
+
+        # Soil
+        self.soil_layer.remove_water()
+        self.raining = randint(0,10) > 3
+        self.soil_layer.raining = self.raining
+        if self.raining:
+            self.soil_layer.water_all()
+
+        # Apples on the Trees
+        for tree in self.tree_sprites.sprites():
+            for apple in tree.apple_sprites.sprites():
+                apple.kill()
+            tree.create_fruit()
+
     def run(self,dt):
         self.display_surface.fill('black')
         self.all_sprites.costum_draw(self.player)
@@ -85,6 +125,14 @@ class Level:
 
         self.overlay.display()
         # print(self.player.item_inventory)
+
+        # Rain
+        if self.raining:
+            self.rain.update()
+
+        # Transition Overlay
+        if self.player.sleep:
+            self.transition.play()
 
 class CameraGroup(pygame.sprite.Group):
     def __init__(self):
@@ -104,12 +152,12 @@ class CameraGroup(pygame.sprite.Group):
                     offset_rect.center -= self.offset
                     self.display_surface.blit(sprite.image, offset_rect)
 
-                    # Analytics
-                    if sprite == player:
-                        pygame.draw.rect(self.display_surface,'red',offset_rect,5)
-                        hitbox_rect = player.hitbox.copy()
-                        hitbox_rect.center = offset_rect.center
-                        pygame.draw.rect(self.display_surface, 'green',hitbox_rect,5)
-                        target_pos = offset_rect.center + PLAYER_TOOL_OFFSET[player.status.split('_')[0]]
-                        pygame.draw.circle(self.display_surface,'blue',target_pos,5)
+                    # # Analytics
+                    # if sprite == player:
+                    #     pygame.draw.rect(self.display_surface,'red',offset_rect,5)
+                    #     hitbox_rect = player.hitbox.copy()
+                    #     hitbox_rect.center = offset_rect.center
+                    #     pygame.draw.rect(self.display_surface, 'green',hitbox_rect,5)
+                    #     target_pos = offset_rect.center + PLAYER_TOOL_OFFSET[player.status.split('_')[0]]
+                    #     pygame.draw.circle(self.display_surface,'blue',target_pos,5)
             

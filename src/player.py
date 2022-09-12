@@ -4,7 +4,7 @@ from settings import *
 from timer import Timer
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, pos, group, collision_sprites, tree_sprites):
+    def __init__(self, pos, group, collision_sprites, tree_sprites, interaction, soil_layer):
         super().__init__(group)
 
         self.import_assets()
@@ -52,22 +52,27 @@ class Player(pygame.sprite.Sprite):
 
         # Interaction
         self.tree_sprites = tree_sprites
+        self.interaction = interaction
+        self.sleep = False
+        self.soil_layer = soil_layer
 
     def use_tool(self):
         if self.selected_tool == 'hoe':
-            pass
+            self.soil_layer.get_hit(self.target_pos)
+
         if self.selected_tool == 'axe':
             for tree in self.tree_sprites.sprites():
                 if tree.rect.collidepoint(self.target_pos):
                     tree.damage()
+
         if self.selected_tool == 'water':
-            pass
+            self.soil_layer.water(self.target_pos)
 
     def get_target_position(self):
         self.target_pos = self.rect.center + PLAYER_TOOL_OFFSET[self.status.split('_')[0]]
 
     def use_seed(self):
-        pass
+        self.soil_layer.plant_seed(self.target_pos, self.selected_seed)
 
     def import_assets(self):
         self.animations = {'up': [],      'down': [],       'left': [],       'right': [],
@@ -90,7 +95,7 @@ class Player(pygame.sprite.Sprite):
     def input(self):
         keys = pygame.key.get_pressed()
 
-        if not self.timers['tool use'].active:
+        if not self.timers['tool use'].active and not self.sleep:
             # Directions
             if keys[pygame.K_w]:
                 self.direction.y = -1
@@ -137,6 +142,19 @@ class Player(pygame.sprite.Sprite):
                 self.seed_index += 1
                 self.seed_index = self.seed_index if self.seed_index < len(self.seeds) else 0
                 self.selected_seed = self.seeds[self.seed_index]
+
+            if keys[pygame.K_RETURN]:
+                collided_interation_sprite = pygame.sprite.spritecollide(
+                    sprite = self, 
+                    group = self.interaction, 
+                    dokill = False
+                    )
+                if collided_interation_sprite:
+                    if collided_interation_sprite[0].name == 'Trader':
+                        pass
+                    else:
+                        self.status = 'left_idle'
+                        self.sleep = True
 
     def get_status(self):
 
